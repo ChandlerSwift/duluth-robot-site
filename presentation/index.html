@@ -1,0 +1,187 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+		<title>Building a Resilient Control Scheme over Unreliable Wireless Networks</title>
+
+		<link rel="stylesheet" href="reveal-js/css/reset.css">
+		<link rel="stylesheet" href="reveal-js/css/reveal.css">
+		<link rel="stylesheet" href="reveal-js/css/theme/serif.css">
+
+		<!-- Theme used for syntax highlighting of code -->
+		<link rel="stylesheet" href="reveal-js/lib/css/monokai.css">
+
+		<!-- Printing and PDF exports -->
+		<script>
+			var link = document.createElement( 'link' );
+			link.rel = 'stylesheet';
+			link.type = 'text/css';
+			link.href = window.location.search.match( /print-pdf/gi ) ? 'css/print/pdf.css' : 'css/print/paper.css';
+			document.getElementsByTagName( 'head' )[0].appendChild( link );
+		</script>
+	</head>
+	<body>
+		<div class="reveal">
+			<div class="slides">
+				<section>
+					<h2>Building a Resilient Control Scheme over Unreliable Wireless Networks</h2>
+					<h5>Chandler Swift</h5>
+					<a href="https://duluth.chandlerswift.com/robot/">https://duluth.chandlerswift.com/robot/</a>
+					<aside class="notes">
+						Intro: Name, year, major, interests<br>
+						I have a dedicated spot for questions at the end but I'm happy to have (constructive) questions at any time!
+					</aside>
+				</section>
+				<section>
+					<h3>About the Robot</h3>
+					<ul>
+						<li class="fragment">Purchased in 1999 by UMD's Computer Science department</li>
+						<li class="fragment">Specs: Pentium III, 64MB RAM, </li>
+						<li class="fragment">Lots of neat specialty hardware</li>
+					</ul>
+					<aside class="notes">
+						Probably in the range of $15-20k at the time.<br>
+						Camera, speech synthesis, radar, sonar, bump sensors, ...<br><br>
+
+						ssh robot<br>
+						ssh mobility@10.0.0.2<br>
+						cat /proc/cpuinfo<br>
+						free<br>
+						df -h<br>
+						python -v<br>
+						cc --version<br>
+						# EGCS: Forked in 1997, re-merged in 1999<br>
+						make --version<br><br>
+
+						More info on the GitHub repository, plus manuals!
+					</aside>
+					</section>
+					<section>
+						<h3>Objectives</h3>
+					<ul>
+						<li class="fragment">Drive the robot over wifi</li>
+						<li class="fragment">Keep original hardware</li>
+						<li class="fragment">Don't break things!</li>
+					</ul>
+					<aside class="notes">
+						Keep original hardware, supplementing with new tech as needed<br>
+						CPU power for video capture:
+						https://user-images.githubusercontent.com/8261698/52658543-ec9fb980-2ec0-11e9-94ee-63f43c6de23b.gif
+					</aside>
+				</section>
+				<section>
+					<h3>Methods</h3>
+					<ul>
+						<li class="fragment">Hardware improvements</li>
+						<li class="fragment"><del>Kernel/driver tweaks</del></li>
+						<li class="fragment">Software protocol improvements</li>
+					</ul>
+					<aside class="notes">
+					</aside>
+				</section>
+				<section>
+					<h3>Methods &ndash; Software</h3>
+<pre><code class="hljs">#!/usr/bin/python3
+import time
+from threading import Timer
+
+last_cmd_received = time.time()
+WATCHDOG_THRESHOLD = 0.100  # seconds
+
+# Runs every (100 plus the time elapsed
+# in the function)ms
+def run_watchdog():
+	elapsed = time.time() - last_cmd_received
+	if elapsed > WATCHDOG_THRESHOLD:
+		set_robot_drive(0,0)
+		Timer(0.1,run_watchdog).start() 
+
+def on_cmd(cmd):
+	global last_cmd_received
+	last_cmd_received = time.time()
+	...
+
+if __name__ == "__main__":
+	run_watchdog()
+	server.run_forever()
+</code></pre>
+				</section>
+
+				<section>
+					<h3>Results &ndash; Hardware &ndash; Brostrend</h3>
+					<img src="results/brostrend-1.png" alt="Brostrend Adapter, run 1" width="250px">
+					<img src="results/brostrend-2.png" alt="Brostrend Adapter, run 2" width="250px"><br>
+					<img src="results/brostrend-3.png" alt="Brostrend Adapter, run 3" width="250px">
+					<img src="results/brostrend-4.png" alt="Brostrend Adapter, run 4" width="250px">
+				</section>
+				<section>
+					<h4>Results &ndash; Hardware &ndash; Canakit Internal</h4>
+					<img src="results/internal-1.png" alt="Internal Canakit Adapter, run 1" width="250px">
+					<img src="results/internal-2.png" alt="Internal Canakit Adapter, run 2" width="250px"><br>
+					<img src="results/internal-3.png" alt="Internal Canakit Adapter, run 3" width="250px">
+					<img src="results/internal-4.png" alt="Internal Canakit Adapter, run 4" width="250px">
+				</section>
+				<section>
+					<h4>Results &ndash; Hardware &ndash; Canakit External</h4>
+					<img src="results/external-1.png" alt="External Canakit Adapter, run 1" width="250px">
+					<img src="results/external-2.png" alt="External Canakit Adapter, run 2" width="250px"><br>
+					<img src="results/external-3.png" alt="External Canakit Adapter, run 3" width="250px">
+					<img src="results/external-4.png" alt="External Canakit Adapter, run 4" width="250px">
+				</section>
+				<section>
+					<h4>Results &ndash; Hardware &ndash; Overview</h4>
+<pre>brostrend-1.csv	546	42	7.69
+brostrend-2.csv	577	126	21.84
+brostrend-3.csv	554	8	1.44
+brostrend-4.csv	619	53	8.56
+external-1.csv	635	227	35.75
+external-2.csv	730	268	36.71
+external-3.csv	600	141	23.50
+external-4.csv	552	103	18.66
+internal-1.csv	593	241	40.64
+internal-2.csv	578	236	40.83
+internal-3.csv	591	263	44.50
+internal-4.csv	557	273	49.01
+</pre>
+				</section>
+				<section>
+					<h3>Results &ndash; Stopping Distance &ndash; Overview</h3>
+<pre>
+Run	Enabled	Disabled
+1	10	198
+2	13	144
+3	15	156
+4	15	192
+5	14	198
+6	8	156
+7	8	192
+8	4	168
+Average	10.9	176
+</pre>
+				</section>
+			</div>
+		</div>
+
+		<script src="reveal-js/js/reveal.js"></script>
+
+		<script>
+			// More info about config & dependencies:
+			// - https://github.com/hakimel/reveal.js#configuration
+			// - https://github.com/hakimel/reveal.js#dependencies
+			Reveal.initialize({
+				fragmentInURL: true,
+				hash: true,
+				history: true,
+				//previewLinks: true, // Doesn't seem to currently work?
+				dependencies: [
+					{ src: 'reveal-js/plugin/markdown/marked.js' },
+					{ src: 'reveal-js/plugin/markdown/markdown.js' },
+					{ src: 'reveal-js/plugin/notes/notes.js', async: true },
+					{ src: 'reveal-js/plugin/highlight/highlight.js', async: true }
+				]
+			});
+		</script>
+	</body>
+</html>
